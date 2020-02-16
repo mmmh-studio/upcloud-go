@@ -129,6 +129,32 @@ func (r DeleteNetworkRequest) Path() string {
 	return fmt.Sprintf("%s/network/%s", apiURL, r.UUID)
 }
 
+type GetNetworkDetailsRequest struct {
+	UUID string
+}
+
+func (r GetNetworkDetailsRequest) Path() string {
+	return fmt.Sprintf("%s/network/%s", apiURL, r.UUID)
+}
+
+type getNetworkDetailsResponse struct {
+	network Network
+}
+
+func (r *getNetworkDetailsResponse) UnmarshalJSON(raw []byte) error {
+	var res struct {
+		Network Network `json:"network"`
+	}
+
+	if err := json.Unmarshal(raw, &res); err != nil {
+		return err
+	}
+
+	r.network = res.Network
+
+	return nil
+}
+
 type ListNetworksInZoneRequest struct {
 	Zone string
 }
@@ -165,6 +191,16 @@ func (s *Service) CreateNetwork(req CreateNetworkRequest) (*Network, error) {
 	}
 
 	return &res.Network, nil
+}
+
+func (s *Service) GetNetworkDetails(req GetNetworkDetailsRequest) (*Network, error) {
+	res := &getNetworkDetailsResponse{}
+
+	if err := s.client.Get(req, res); err != nil {
+		return nil, err
+	}
+
+	return &res.network, nil
 }
 
 func (s *Service) DeleteNetwork(req DeleteNetworkRequest) error {
